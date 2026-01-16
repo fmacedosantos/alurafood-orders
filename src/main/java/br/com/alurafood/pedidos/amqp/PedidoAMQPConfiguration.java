@@ -1,5 +1,8 @@
 package br.com.alurafood.pedidos.amqp;
 
+import org.springframework.amqp.core.Binding;
+import org.springframework.amqp.core.BindingBuilder;
+import org.springframework.amqp.core.FanoutExchange;
 import org.springframework.amqp.core.Queue;
 import org.springframework.amqp.rabbit.connection.ConnectionFactory;
 import org.springframework.amqp.rabbit.core.RabbitAdmin;
@@ -40,5 +43,16 @@ public class PedidoAMQPConfiguration {
     @Bean
     public Queue filaDetalhesPedidos() {
         return new Queue("pagamentos.detalhes-pedido", false);
+    }
+
+    @Bean
+    public FanoutExchange fanoutExchange() {
+        return new FanoutExchange("pagamentos.exchange");
+    }
+
+    @Bean
+    public Binding bindPagamentoPedido(FanoutExchange fanoutExchange) {
+        return BindingBuilder.bind(filaDetalhesPedidos())
+                .to(fanoutExchange);
     }
 }
