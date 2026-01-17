@@ -2,13 +2,20 @@ package br.com.alurafood.pedidos.amqp;
 
 import br.com.alurafood.pedidos.dto.PagamentoDto;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
+import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.stereotype.Component;
 
 @Component
 public class PagamentoListener {
 
     @RabbitListener(queues = "pagamentos.detalhes-pedido")
-    public void recebeMensagem(PagamentoDto pagamento) {
+    public void recebeMensagem(@Payload PagamentoDto pagamento) {
+
+        // Causando erros para fins de teste
+        if (pagamento.getNumero().equals("0000")) {
+            throw new RuntimeException("Número inválido");
+        }
+
         String mensagem = """
                 Dados do pagamento n°%s:
                     Número do pedido %s

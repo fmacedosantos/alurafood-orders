@@ -1,9 +1,6 @@
 package br.com.alurafood.pedidos.amqp;
 
-import org.springframework.amqp.core.Binding;
-import org.springframework.amqp.core.BindingBuilder;
-import org.springframework.amqp.core.FanoutExchange;
-import org.springframework.amqp.core.Queue;
+import org.springframework.amqp.core.*;
 import org.springframework.amqp.rabbit.connection.ConnectionFactory;
 import org.springframework.amqp.rabbit.core.RabbitAdmin;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
@@ -41,8 +38,27 @@ public class PedidoAMQPConfiguration {
     }
 
     @Bean
+    public Queue filaDlqDetalhesPedidos() {
+        return new Queue("pagamentos.detalhes-pedido-dlq", false);
+    }
+
+    @Bean
+    public FanoutExchange deadLetterExchange() {
+        return new FanoutExchange("pagamentos.dlx");
+    }
+
+    @Bean
+    public Binding bindDlxPagamentoPedido() {
+        return BindingBuilder.bind(filaDlqDetalhesPedidos())
+                .to(deadLetterExchange());
+    }
+
+    @Bean
     public Queue filaDetalhesPedidos() {
-        return new Queue("pagamentos.detalhes-pedido", false);
+        return QueueBuilder
+                .nonDurable("pagamentos.detalhes-pedido")
+                .deadLetterExchange("pagamentos.dlx")
+                .build();
     }
 
     @Bean
@@ -51,8 +67,8 @@ public class PedidoAMQPConfiguration {
     }
 
     @Bean
-    public Binding bindPagamentoPedido(FanoutExchange fanoutExchange) {
+    public Binding bindPagamentoPedido() {
         return BindingBuilder.bind(filaDetalhesPedidos())
-                .to(fanoutExchange);
+                .to(fanoutExchange());
     }
 }
